@@ -1,0 +1,275 @@
+apiVersion: agroproj.io/v1alpha1
+kind: Workflow
+metadata:
+  generateName: jupyter-notebook-build-
+spec:
+  entrypoint: main
+
+  serviceAccountName: argo
+
+  volumes:
+    - name: cache
+      emptyDir: {}
+
+  arguments:
+    parameters:
+      # standard-images is a JSON list of image parameters
+      # see for example: https://github.com/CermakM/jupyter-notebooks/tree/experimental/config/standard-images.json
+      - name: standard-images
+      # template is one of [build-dockerimage, build-openshift]
+      - name: template
+        value: build-dockerimage
+
+  templates:
+    - name: main
+      dag:
+        tasks:
+          - name: build-s2i-minimal-image
+            arguments:
+              parameters:
+                - name: notebook-name
+                  value: "s2i-minimal-notebook"
+                - name: image-namespace
+                  value: "quay.io/thoth-station"
+                - name: image-tag
+                  value: "latest"
+                - name: git-repository-url
+                  value: "https://github.com/CermakM/jupyter-notebooks"
+                - name: git-reference
+                  value: "experimental"
+                - name: builder-image
+                  value: "quay.io/thoth-station/s2i-thoth-f31-py37:v0.11.3"
+                - name: context-dir
+                  value: "minimal-notebook"
+            template: build-dockerimage
+          - name: build-standard-images
+            dependencies: [build-s2i-minimal-image]
+            arguments:
+              parameters:
+                - name: notebook-name
+                  value: "{{item.NOTEBOOK_NAME}}"
+                - name: image-namespace
+                  value: "{{item.IMAGE_NAMESPACE}}"
+                - name: image-tag
+                  value: "{{item.IMAGE_TAG}}"
+                - name: git-repository-url
+                  value: "{{item.GIT_REPOSITORY_URL}}"
+                - name: git-reference
+                  value: "{{item.GIT_REFERENCE}}"
+                - name: builder-image
+                  value: "{{item.BUILDER_IMAGE}}"
+                - name: context-dir
+                  value: "{{item.CONTEXT_DIR}}"
+                - name: force
+                  value: "{{item.FORCE}}"
+            template: "{{workflow.parameters.template}}"
+            withParam: "{{workflow.parameters.standard-images}}"
+
+    - name: build-openshift
+      inputs: &build-inputs
+        parameters:
+          # required
+          - name: notebook-name
+          - name: git-repository-url
+          - name: git-reference
+          # defaults
+          - name: builder-image
+            value: "s2i-thoth-f31-py37:latest"
+          - name: context-dir
+            value: ""
+          - name: force
+            value: true
+      steps:
+        - - name: process-builder-template
+            arguments:
+              parameters: &builder-parameters
+                - name: notebook-name
+                  value: "{{inputs.parameters.notebook-name}}"
+                - name: git-repository-url
+                  value: "{{inputs.parameters.git-repository-url}}"
+                - name: git-reference
+                  value: "{{inputs.parameters.git-reference}}"
+                - name: builder-image
+                  value: "{{inputs.parameters.builder-image}}"
+                - name: context-dir
+                  value: "{{inputs.parameters.context-dir}}"
+            template: process-builder-template
+        - - name: start-build
+            arguments:
+              parameters:
+                - name: build-name
+                  value: "{{inputs.parameters.notebook-name}}"
+                - name: force
+                  value: "{{inputs.parameters.force}}"
+            template: start-build
+        - - name: await-build
+            arguments:
+              parameters:
+                - name: build-name
+                  value: "{{inputs.parameters.notebook-name}}"
+                - name: build-version
+                  value: "{{steps.start-build.outputs.parameters.build-version}}"
+            template: await-build
+
+    - name: build-dockerimage
+      inputs: &build-dockerimage-inputs
+        parameters:
+          # required
+          - name: notebook-name
+          - name: image-namespace
+          - name: git-repository-url
+          # defaults
+          - name: image-tag
+            value: latest
+          - name: builder-image
+            value: "s2i-thoth-f31-py37:latest"
+          - name: context-dir
+            value: ""
+          - name: force
+            value: true
+          - name: git-reference
+            value: "master"
+      steps:
+        - - name: process-builder-template
+            arguments:
+              parameters:
+                - name: notebook-name
+                  value: "{{inputs.parameters.notebook-name}}"
+                - name: image-namespace
+                  value: "{{inputs.parameters.image-namespace}}"
+                - name: image-tag
+                  value: "{{inputs.parameters.image-tag}}"
+                - name: git-repository-url
+                  value: "{{inputs.parameters.git-repository-url}}"
+                - name: git-reference
+                  value: "{{inputs.parameters.git-reference}}"
+                - name: builder-image
+                  value: "{{inputs.parameters.builder-image}}"
+                - name: context-dir
+                  value: "{{inputs.parameters.context-dir}}"
+            template: process-builder-dockerimage-template
+        - - name: start-build
+            arguments:
+              parameters:
+                - name: build-name
+                  value: "{{inputs.parameters.notebook-name}}"
+                - name: force
+                  value: "{{inputs.parameters.force}}"
+            template: start-build
+        - - name: await-build
+            arguments:
+              parameters:
+                - name: build-name
+                  value: "{{inputs.parameters.notebook-name}}"
+                - name: build-version
+                  value: "{{steps.start-build.outputs.parameters.build-version}}"
+            template: await-build
+
+    - name: process-builder-template
+      inputs: *build-inputs
+      script:
+        image: cermakm/oc-tool:latest
+        command: [sh]
+        source: |-
+          oc process notebook-builder \
+            --param NOTEBOOK_NAME='{{inputs.parameters.notebook-name}}'           \
+            --param GIT_REPOSITORY_URL='{{inputs.parameters.git-repository-url}}' \
+            --param GIT_REFERENCE='{{inputs.parameters.git-reference}}'           \
+            --param BUILDER_IMAGE='{{inputs.parameters.builder-image}}'           \
+            --param CONTEXT_DIR='{{inputs.parameters.context-dir}}' |\
+          oc apply -f -
+        resources:
+          requests:
+            cpu: 100m
+            memory: 32Mi
+          limits:
+            cpu: 200m
+            memory: 128Mi
+      metadata:
+        labels:
+          template: "{{inputs.parameters.notebook-name}}"
+
+    - name: process-builder-dockerimage-template
+      inputs: *build-dockerimage-inputs
+      script:
+        image: cermakm/oc-tool:latest
+        command: [sh]
+        source: |-
+          oc process notebook-builder-dockerimage \
+            --param NOTEBOOK_NAME='{{inputs.parameters.notebook-name}}'           \
+            --param IMAGE_NAMESPACE='{{inputs.parameters.image-namespace}}'       \
+            --param IMAGE_TAG='{{inputs.parameters.image-tag}}'                   \
+            --param GIT_REPOSITORY_URL='{{inputs.parameters.git-repository-url}}' \
+            --param GIT_REFERENCE='{{inputs.parameters.git-reference}}'           \
+            --param BUILDER_IMAGE='{{inputs.parameters.builder-image}}'           \
+            --param CONTEXT_DIR='{{inputs.parameters.context-dir}}' |\
+          oc apply -f -
+        resources:
+          requests:
+            cpu: 100m
+            memory: 32Mi
+          limits:
+            cpu: 200m
+            memory: 128Mi
+      metadata:
+        labels:
+          template: "{{inputs.parameters.notebook-name}}"
+
+    - name: start-build
+      inputs:
+        parameters:
+          - name: build-name
+          - name: force
+            value: true
+      outputs:
+        parameters:
+          - name: build-version
+            valueFrom:
+              path: /mnt/outputs/parameters/build-version
+      script:
+        image: cermakm/oc-tool:latest
+        command: [sh]
+        source: |-
+          set -eux
+
+          build_started=$(\
+            oc get builds \
+              -l build='{{inputs.parameters.build-name}}' \
+              --field-selector status=Running  \
+              --field-selector status=New \
+              --output name |\
+            wc -l \
+          )
+
+          if [ "$build_started" == "0" ] && [ "{{inputs.parameters.force}}" == "true" ]; then
+            oc start-build '{{inputs.parameters.build-name}}'
+          fi
+
+          oc get bc/{{inputs.parameters.build-name}} -o jsonpath='{.status.lastVersion}' |\
+           tee /mnt/outputs/parameters/build-version
+        resources:
+          requests:
+            cpu: 100m
+            memory: 32Mi
+          limits:
+            cpu: 200m
+            memory: 128Mi
+        volumeMounts:
+          - name: cache
+            mountPath: /mnt/outputs/parameters
+
+    - name: await-build
+      inputs:
+        parameters:
+          - name: build-name
+          - name: build-version
+            value: "1"
+      resource:
+        action: get
+        successCondition: status.phase == Complete
+        failureCondition: status.phase == Failed
+        manifest: |
+          apiVersion: "build.openshift.io/v1"
+          kind: "Build"
+          metadata:
+            name: "{{inputs.parameters.build-name}}-{{inputs.parameters.build-version}}"
