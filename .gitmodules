@@ -1,0 +1,3 @@
+[submodule "minimal-notebook"]
+	path = minimal-notebook
+	url = https://github.com/thoth-station/s2i-minimal-notebook
