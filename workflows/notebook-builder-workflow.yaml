@@ -34,13 +34,11 @@ spec:
                 - name: image-tag
                   value: "latest"
                 - name: git-repository-url
-                  value: "https://github.com/CermakM/jupyter-notebooks"
+                  value: "https://github.com/thoth-station/s2i-minimal-notebook"
                 - name: git-reference
-                  value: "experimental"
+                  value: "master"
                 - name: builder-image
                   value: "quay.io/thoth-station/s2i-thoth-f31-py37:v0.11.3"
-                - name: context-dir
-                  value: "minimal-notebook"
             template: build-dockerimage
           - name: build-standard-images
             dependencies: [build-s2i-minimal-image]
