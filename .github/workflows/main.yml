@@ -1,0 +1,30 @@
+# This is a builder workflow to rebuild images on OpenShift
+
+name: Builder
+
+on:
+  push:
+    branches:
+      - master
+      - v*
+      # TODO: consider removing the develop branch
+      - develop
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  build:
+    runs-on: openshift
+
+    steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - uses: actions/checkout@v2
+
+      - name: Submit builder Workflow
+        run: |-
+          bash scripts/submit.sh
+        if: >-
+          !contains(github.event.head_commit.message, '!ignore') ||
+          !contains(github.event.head_commit.message, '!minor')  ||
+          !contains(github.event.head_commit.message, '!skip')
