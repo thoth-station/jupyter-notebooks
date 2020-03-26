@@ -1,0 +1,66 @@
+apiVersion: template.openshift.io/v1
+kind: Template
+metadata:
+  name: actions-runner-template
+
+parameters:
+  - name: APP_NAME
+    description: "Name of the application. It is recommended to use name of the Git Hub repository."
+    required: true
+  - name: IMAGE_NAME
+    description: "Name of the actions runner image."
+    value: "quay.io/cermakm/openshift-actions-runner"
+  - name: IMAGE_TAG
+    description: "Tag of the actions runner image."
+    value: "latest"
+    required: false
+  - name: REPO_URL
+    description: "Git Hub repository URL."
+    required: true
+  - name: RUNNER_TOKEN
+    description: "Action Runner token, see: https://help.github.com/en/actions/hosting-your-own-runners/adding-self-hosted-runners."
+    required: true
+
+objects:
+  - kind: Secret
+    apiVersion: v1
+    metadata:
+      name: ${APP_NAME}-actions-runner
+      labels:
+        app: ${APP_NAME}
+    type: Opaque
+    stringData:
+      RUNNER_TOKEN: ${RUNNER_TOKEN}
+
+  - kind: DeploymentConfig
+    apiVersion: v1
+    metadata:
+      name: ${APP_NAME}-actions-runner
+      labels:
+        app: ${APP_NAME}
+    spec:
+      replicas: 1
+      triggers:
+        - type: ConfigChange
+      template:
+        metadata:
+          name: actions-runner
+          labels:
+            app: ${APP_NAME}
+        spec:
+          serviceAccountName: workflow-creator
+          selector:
+            matchLabels:
+              app: ${APP_NAME}
+          containers:
+            - name: runner
+              image: ${IMAGE_NAME}:${IMAGE_TAG}
+              imagePullPolicy: Always
+              env:
+                - name: GITHUB_REPO_URL
+                  value: "${REPO_URL}"
+                - name: GITHUB_RUNNER_TOKEN
+                  valueFrom:
+                    secretKeyRef:
+                      name: ${APP_NAME}-actions-runner
+                      key: RUNNER_TOKEN
