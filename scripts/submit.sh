@@ -19,7 +19,6 @@ main() {
 	else
 			argo submit \
 			--parameter standard-images="$STANDARD_IMAGES" \
-			--insecure-skip-tls-verify					   \
 			--wait $@ https://raw.githubusercontent.com/argoproj/argo/master/examples/hello-world.yaml
 	fi
 }
