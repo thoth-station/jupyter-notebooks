@@ -7,15 +7,13 @@ on:
     branches:
       - master
       - v*
-      # TODO: consider removing the develop branch
-      - develop
   pull_request:
     branches:
       - master
 
 jobs:
   build:
-    runs-on: openshift
+    runs-on: self-hosted
 
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
@@ -23,6 +21,7 @@ jobs:
 
       - name: Submit builder Workflow
         run: |-
+          # TODO: Can we discover which image to rebuild base don the trigger
           bash scripts/submit.sh
         if: >-
           !contains(github.event.head_commit.message, '!ignore') ||
