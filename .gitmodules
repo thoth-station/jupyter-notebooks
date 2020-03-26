@@ -4,3 +4,6 @@
 [submodule "tensorflow-notebook"]
 	path = tensorflow-notebook
 	url = https://github.com/thoth-station/s2i-tensorflow-notebook
+[submodule "scipy-notebook"]
+	path = scipy-notebook
+	url = https://github.com/thoth-station/s2i-scipy-notebook
