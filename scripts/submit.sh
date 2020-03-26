@@ -16,7 +16,7 @@ main() {
 	local apiserver="$2"
 
 	docker run \
-		-v "$(pwd)/openshift":/tmp:ro  \
+		-v "$(pwd)/workflows":/tmp:ro  \
 		argoproj/argocli:v2.4.3 submit \
 		--token "$TOKEN"                               \
 		--server    "$apiserver"                       \
