@@ -4,9 +4,9 @@
 		"IMAGE_TAG": "latest",
 		"NOTEBOOK_NAME": "s2i-scipy-notebook",
 		"BUILDER_IMAGE": "quay.io/thoth-station/s2i-minimal-notebook:latest",
-		"GIT_REPOSITORY_URL": "https://github.com/CermakM/jupyter-notebooks",
-		"GIT_REFERENCE": "experimental",
-		"CONTEXT_DIR": "scipy-notebook",
+		"GIT_REPOSITORY_URL": "https://github.com/thoth-station/s2i-minimal-notebook",
+		"GIT_REFERENCE": "master",
+		"CONTEXT_DIR": null,
 		"FORCE": "true"
 	},
 	{
@@ -14,9 +14,9 @@
 		"IMAGE_TAG": "latest",
 		"NOTEBOOK_NAME": "s2i-tensorflow-notebook",
 		"BUILDER_IMAGE": "quay.io/thoth-station/s2i-minimal-notebook:latest",
-		"GIT_REPOSITORY_URL": "https://github.com/CermakM/jupyter-notebooks",
-		"GIT_REFERENCE": "experimental",
-		"CONTEXT_DIR": "tensorflow-notebook",
+		"GIT_REPOSITORY_URL": "https://github.com/thoth-station/s2i-tensorflow-notebook",
+		"GIT_REFERENCE": "master",
+		"CONTEXT_DIR": null,
 		"FORCE": "true"
 	}
 ]
