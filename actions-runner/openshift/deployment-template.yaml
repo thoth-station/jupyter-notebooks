@@ -1,7 +1,7 @@
 apiVersion: template.openshift.io/v1
 kind: Template
 metadata:
-  name: actions-runner-template
+  name: github-actions-runner-template
 
 parameters:
   - name: APP_NAME
@@ -9,7 +9,7 @@ parameters:
     required: true
   - name: IMAGE_NAME
     description: "Name of the actions runner image."
-    value: "quay.io/cermakm/openshift-actions-runner"
+    value: "quay.io/thoth-station/github-actions-runner"
   - name: IMAGE_TAG
     description: "Tag of the actions runner image."
     value: "latest"
@@ -25,7 +25,7 @@ objects:
   - kind: Secret
     apiVersion: v1
     metadata:
-      name: ${APP_NAME}-actions-runner
+      name: ${APP_NAME}-github-actions-runner
       labels:
         app: ${APP_NAME}
     type: Opaque
@@ -35,7 +35,7 @@ objects:
   - kind: DeploymentConfig
     apiVersion: v1
     metadata:
-      name: ${APP_NAME}-actions-runner
+      name: ${APP_NAME}-github-actions-runner
       labels:
         app: ${APP_NAME}
     spec:
@@ -44,7 +44,7 @@ objects:
         - type: ConfigChange
       template:
         metadata:
-          name: actions-runner
+          name: github-actions-runner
           labels:
             app: ${APP_NAME}
         spec:
@@ -62,5 +62,5 @@ objects:
                 - name: GITHUB_RUNNER_TOKEN
                   valueFrom:
                     secretKeyRef:
-                      name: ${APP_NAME}-actions-runner
+                      name: ${APP_NAME}-github-actions-runner
                       key: RUNNER_TOKEN

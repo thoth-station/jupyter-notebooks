@@ -25,8 +25,15 @@ As the build should run in a secured environment --- in our case, OpenShift --- 
 
 To deploy the runner, issue the following set of commands (assumes OpenShift cluster and `oc` tool being installed)
 
-```
+```bash
 oc apply -f actions-runner/openshift
+
+# Get the RUNNER_ROKEN from the settings/actions `Add runner`
+oc process github-actions-runner \
+    --param APP_NAME=jupyter-notebooks \
+    --param REPO_URL=https://github.com/thoth-station/jupyter-notebooks \
+    --param RUNNER_TOKEN=${RUNNER_TOKEN} \
+    | oc apply -f -
 ```
 
 ### [optional] Building the actions runner image
