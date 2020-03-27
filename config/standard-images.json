@@ -4,7 +4,7 @@
 		"IMAGE_TAG": "latest",
 		"NOTEBOOK_NAME": "s2i-scipy-notebook",
 		"BUILDER_IMAGE": "quay.io/thoth-station/s2i-minimal-notebook:latest",
-		"GIT_REPOSITORY_URL": "https://github.com/thoth-station/s2i-minimal-notebook",
+		"GIT_REPOSITORY_URL": "https://github.com/thoth-station/s2i-scipy-notebook",
 		"GIT_REFERENCE": "master",
 		"CONTEXT_DIR": "",
 		"FORCE": "true"
