@@ -15,11 +15,11 @@ main() {
 			argoproj/argocli:v2.4.3 submit \
 			--parameter standard-images="$STANDARD_IMAGES" \
 			--insecure-skip-tls-verify					   \
-			--wait $@ /tmp/notebook-builder-workflow.yaml
+			$@ /tmp/notebook-builder-workflow.yaml
 	else
 			argo submit \
 			--parameter standard-images="$STANDARD_IMAGES" \
-			--wait $@ $(pwd)/workflows/notebook-builder-workflow.yaml
+			$@ $(pwd)/workflows/notebook-builder-workflow.yaml
 	fi
 }
 
