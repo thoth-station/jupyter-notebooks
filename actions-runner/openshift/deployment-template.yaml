@@ -14,11 +14,11 @@ parameters:
     description: "Tag of the actions runner image."
     value: "latest"
     required: false
-  - name: REPO_URL
-    description: "Git Hub repository URL."
+  - name: GITHUB_REPO
+    description: "Git Hub repository in a form owner/repo."
     required: true
-  - name: RUNNER_TOKEN
-    description: "Action Runner token, see: https://help.github.com/en/actions/hosting-your-own-runners/adding-self-hosted-runners."
+  - name: GITHUB_REPO_TOKEN
+    description: "Git Hub repository token used to set the runner token."
     required: true
 
 objects:
@@ -30,7 +30,7 @@ objects:
         app: ${APP_NAME}
     type: Opaque
     stringData:
-      RUNNER_TOKEN: ${RUNNER_TOKEN}
+      GITHUB_REPO_TOKEN: ${GITHUB_REPO_TOKEN}
 
   - kind: DeploymentConfig
     apiVersion: v1
@@ -57,10 +57,10 @@ objects:
               image: ${IMAGE_NAME}:${IMAGE_TAG}
               imagePullPolicy: Always
               env:
-                - name: GITHUB_REPO_URL
-                  value: "${REPO_URL}"
-                - name: GITHUB_RUNNER_TOKEN
+                - name: GITHUB_REPO
+                  value: "${GITHUB_REPO}"
+                - name: GITHUB_REPO_TOKEN
                   valueFrom:
                     secretKeyRef:
                       name: ${APP_NAME}-github-actions-runner
-                      key: RUNNER_TOKEN
+                      key: GITHUB_REPO_TOKEN

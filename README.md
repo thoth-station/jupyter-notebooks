@@ -31,8 +31,8 @@ oc apply -f actions-runner/openshift
 # Get the RUNNER_ROKEN from the settings/actions `Add runner`
 oc process github-actions-runner \
     --param APP_NAME=jupyter-notebooks \
-    --param REPO_URL=https://github.com/thoth-station/jupyter-notebooks \
-    --param RUNNER_TOKEN=${RUNNER_TOKEN} \
+    --param GITHUB_REPO=thoth-station/jupyter-notebooks \
+    --param GITHUB_REPO_TOKEN=${REPO_TOKEN} \
     | oc apply -f -
 ```
 
