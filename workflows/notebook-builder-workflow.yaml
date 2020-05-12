@@ -38,7 +38,7 @@ spec:
                 - name: git-reference
                   value: "master"
                 - name: builder-image
-                  value: "quay.io/thoth-station/s2i-thoth-f31-py37:v0.11.3"
+                  value: "quay.io/thoth-station/s2i-thoth-ubi8-py36:v0.12.3"
             template: build-dockerimage
           - name: build-standard-images
             dependencies: [build-s2i-minimal-image]
@@ -72,7 +72,7 @@ spec:
           - name: git-reference
           # defaults
           - name: builder-image
-            value: "s2i-thoth-f31-py37:latest"
+            value: "s2i-thoth-ubi8-py36:latest"
           - name: context-dir
             value: ""
           - name: force
@@ -120,7 +120,7 @@ spec:
           - name: image-tag
             value: latest
           - name: builder-image
-            value: "s2i-thoth-f31-py37:latest"
+            value: "s2i-thoth-ubi8-py36:latest"
           - name: context-dir
             value: ""
           - name: force
